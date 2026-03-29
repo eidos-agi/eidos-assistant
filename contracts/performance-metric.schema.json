@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eidos-agi.github.io/eidos-assistant/contracts/performance-metric.schema.json",
+  "title": "Performance Metric",
+  "description": "One line in metrics.jsonl. Logged after every transcription for continuous performance tracking.",
+  "type": "object",
+  "required": ["timestamp", "model", "audioFileSizeBytes", "audioDurationSec", "transcriptionTimeSec", "wordCount", "realtimeFactor"],
+  "properties": {
+    "timestamp": { "type": "string", "format": "date-time" },
+    "model": { "type": "string", "description": "Whisper model used" },
+    "audioFileSizeBytes": { "type": "integer" },
+    "audioDurationSec": { "type": "number" },
+    "transcriptionTimeSec": { "type": "number" },
+    "wordCount": { "type": "integer" },
+    "realtimeFactor": { "type": "number", "description": "transcription_time / audio_duration. Lower = faster." }
+  },
+  "additionalProperties": false
+}

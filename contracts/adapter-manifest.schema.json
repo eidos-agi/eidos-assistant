@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eidos-agi.github.io/eidos-assistant/contracts/adapter-manifest.schema.json",
+  "title": "Omni Adapter Manifest",
+  "description": "Written to ~/.config/eidosomni/adapters.d/ by apps on first launch. Omni reads this to discover adapters. The app registers itself — users configure nothing.",
+  "type": "object",
+  "required": ["name", "version", "adapter", "data_dir", "uri_scheme", "source_name", "sync_interval", "registered_by", "registered_at"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Adapter name — matches omni source name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver version of the adapter"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description"
+    },
+    "adapter": {
+      "type": "object",
+      "required": ["module", "path"],
+      "properties": {
+        "module": { "type": "string", "description": "Python module name" },
+        "path": { "type": "string", "description": "Absolute path to the .py adapter file" }
+      }
+    },
+    "data_dir": {
+      "type": "string",
+      "description": "Where this adapter's data lives (bucket root)"
+    },
+    "uri_scheme": {
+      "type": "string",
+      "description": "URI prefix for resources (e.g., voice://)"
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Omni source name for this adapter"
+    },
+    "sync_interval": {
+      "type": "integer",
+      "description": "Seconds between sync cycles"
+    },
+    "registered_by": {
+      "type": "string",
+      "description": "Bundle ID or identifier of the registering app"
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the app registered"
+    }
+  },
+  "additionalProperties": false
+}

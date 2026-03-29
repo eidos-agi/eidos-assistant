@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eidos-agi.github.io/eidos-assistant/contracts/manifest-entry.schema.json",
+  "title": "Manifest Entry",
+  "description": "One line in voice/manifest.jsonl. Tracks the lifecycle of a recording bucket. The omni voice adapter reads this for fast discovery instead of scanning directories.",
+  "type": "object",
+  "required": ["uuid", "timestamp", "status"],
+  "properties": {
+    "uuid": {
+      "type": "string",
+      "description": "Recording bucket UUID — matches the directory name"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this status was set"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["transcribed", "classified", "indexed", "error"],
+      "description": "Lifecycle state of the bucket"
+    },
+    "duration_sec": {
+      "type": "number",
+      "description": "Recording duration (set on first entry)"
+    }
+  },
+  "additionalProperties": false
+}

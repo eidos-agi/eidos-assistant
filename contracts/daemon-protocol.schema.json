@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eidos-agi.github.io/eidos-assistant/contracts/daemon-protocol.schema.json",
+  "title": "Daemon Socket Protocol",
+  "description": "Request/response contract for the Unix socket between the Mac app and the classification daemon. One JSON object per message, newline-terminated.",
+  "definitions": {
+    "request": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Transcribed voice note text"
+        },
+        "uuid": {
+          "type": "string",
+          "description": "Recording bucket UUID. Daemon writes classification.json into this bucket."
+        }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "required": ["classified"],
+      "properties": {
+        "classified": {
+          "type": "string",
+          "description": "Category assigned by the daemon"
+        },
+        "uuid": {
+          "type": "string",
+          "description": "Bucket UUID that was classified"
+        },
+        "fallback": {
+          "type": "boolean",
+          "description": "True if classification fell back to default (agent error)"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if classification failed"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
