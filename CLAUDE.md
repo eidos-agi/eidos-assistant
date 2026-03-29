@@ -35,3 +35,13 @@ swift build -c release    # build
 ./ci.sh test              # 10 tests
 ./ci.sh deploy            # package + install to /Applications
 ```
+
+## Gotchas (learned the hard way)
+
+- **Python paths:** macOS .app bundles don't inherit shell PATH/pyenv/nvm. WhisperService uses absolute path `~/.pyenv/versions/3.12.7/bin/python3`, never bare `python3`.
+- **Test from the real .app, not Terminal.** Synthetic `say` audio tested from Terminal works because Terminal has PATH. The real .app doesn't. Always test from the deployed app.
+- **Timers:** Use `DispatchSource.makeTimerSource(queue: .main)` for UI timers. Never `Timer.scheduledTimer` + `Task { @MainActor in }` — Tasks pile up and outlive the timer.
+- **PTT guard:** Use a `pttActive` boolean flag, not `event.isARepeat`. `addGlobalMonitorForEvents` doesn't reliably set `isARepeat`.
+- **Accessibility:** Use `AXIsProcessTrusted()` to check. Never `AXIsProcessTrustedWithOptions` with prompt=true — it triggers the system dialog even when already granted.
+- **Chain logging:** The Debug tab (ChainLogger) logs every step of the recording chain. Read `chain.log` to see where it broke. Logs persist to `~/Library/Application Support/eidos-assistant/chain.log`.
+- **Health checks must test the real code path.** The health check for Whisper used a login shell (worked). The actual transcription didn't (failed). Same code path or it's a lie.

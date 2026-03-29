@@ -1,0 +1,97 @@
+{
+  "date": "2026-03-29",
+  "session": "eidos-assistant build + debug",
+  "learnings": [
+    {
+      "text": "macOS .app bundles don't inherit the user's shell PATH, pyenv, or nvm",
+      "type": "tool-gotcha",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "Use absolute paths to interpreters (e.g., ~/.pyenv/versions/3.12.7/bin/python3), never bare python3"
+    },
+    {
+      "text": "Instrument the app itself instead of writing external test scripts",
+      "type": "pattern",
+      "routed_to": "improve-forge/.claude/skills/improve.md",
+      "actionable": "Add 'check for built-in logging/instrumentation' to Step 2"
+    },
+    {
+      "text": "Chain logging at every step is worth more than 100 external tests",
+      "type": "principle",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "ChainLogger.swift logs PTT down, recording start/stop, bucket create, whisper start/done, errors"
+    },
+    {
+      "text": "Health checks must use the same code path as real operations",
+      "type": "pattern",
+      "routed_to": "improve-forge/.claude/skills/improve.md",
+      "actionable": "When scoring reliability, verify health checks test the actual path not a simulated one"
+    },
+    {
+      "text": "Persistent logs are non-negotiable for cross-session debugging",
+      "type": "process",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "chain.log persists to disk and reloads on launch"
+    },
+    {
+      "text": "The first real user test finds bugs that all synthetic tests miss",
+      "type": "principle",
+      "routed_to": "improve-forge/.claude/skills/improve.md",
+      "actionable": "Step 6 (Verify) should always include 'test with real input if possible'"
+    },
+    {
+      "text": "Synthetic say audio hides environment bugs because it runs from Terminal",
+      "type": "tool-gotcha",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "Always test from the real .app, not from Terminal"
+    },
+    {
+      "text": "Ship logging first, features second",
+      "type": "principle",
+      "routed_to": "learning-forge general",
+      "actionable": "A Debug tab with chain logging should be the first feature of any new app"
+    },
+    {
+      "text": "The bug is always in the seam between languages (Swift → Python handoff)",
+      "type": "pattern",
+      "routed_to": "improve-forge rubric",
+      "actionable": "When scoring reliability for multi-language apps, specifically check the language boundaries"
+    },
+    {
+      "text": "Calling AXIsProcessTrustedWithOptions with prompt flag triggers the dialog even when already trusted",
+      "type": "tool-gotcha",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "Use AXIsProcessTrusted() for checking, never AXIsProcessTrustedWithOptions with prompt=true"
+    },
+    {
+      "text": "Build artifacts accumulate silently without .gitignore",
+      "type": "process",
+      "routed_to": "improve-forge/.claude/skills/improve.md",
+      "actionable": "Step 2 should always check for .gitignore and stale build artifacts"
+    },
+    {
+      "text": "Score-driven improvement works — the score tells you where to look",
+      "type": "pattern",
+      "routed_to": "improve-forge vision",
+      "actionable": "Validated: scoring → prioritizing → fixing → verifying is a reliable debugging methodology"
+    },
+    {
+      "text": "DispatchSource.makeTimerSource(queue: .main) is correct for UI timers, not Timer + Task",
+      "type": "tool-gotcha",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "Never wrap Timer callbacks in Task { @MainActor in } — use DispatchSource on .main directly"
+    },
+    {
+      "text": "PTT needs a boolean guard (pttActive), not isARepeat — global monitors don't reliably set isARepeat",
+      "type": "tool-gotcha",
+      "routed_to": "eidos-assistant/CLAUDE.md",
+      "actionable": "Use a pttActive flag set on keyDown, cleared on keyUp/flagsChanged"
+    },
+    {
+      "text": "Debounce < 0.5s recordings — PTT accidents are real and frequent",
+      "type": "project-fix",
+      "routed_to": "eidos-assistant validated",
+      "actionable": "Validated by real use: 0.18s and 0.09s accidental presses were correctly discarded"
+    }
+  ],
+  "count": 15
+}
