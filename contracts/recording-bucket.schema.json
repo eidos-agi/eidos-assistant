@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eidos-agi.github.io/eidos-assistant/contracts/recording-bucket.schema.json",
+  "title": "Recording Bucket",
+  "description": "A self-contained voice recording. Each bucket is a directory named by UUID containing these files. The bucket is the unit of data — omni indexes one bucket as one resource.",
+  "type": "object",
+  "required": ["uuid", "files"],
+  "properties": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier. Also the directory name."
+    },
+    "files": {
+      "type": "object",
+      "description": "Files present in the bucket directory",
+      "properties": {
+        "audio.wav": {
+          "description": "Raw audio recording. 16kHz mono PCM WAV. Source of truth — never deleted.",
+          "type": "object",
+          "properties": {
+            "required": { "const": true },
+            "format": { "const": "wav" },
+            "sample_rate": { "const": 16000 },
+            "channels": { "const": 1 }
+          }
+        },
+        "transcript.json": {
+          "description": "Whisper transcription output. Written by the app after recording.",
+          "type": "object",
+          "required": ["text", "segments", "language", "duration_sec", "model", "transcribed_at", "word_count"],
+          "properties": {
+            "text": { "type": "string", "description": "Full transcription" },
+            "segments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["start", "end", "text"],
+                "properties": {
+                  "start": { "type": "number" },
+                  "end": { "type": "number" },
+                  "text": { "type": "string" }
+                }
+              }
+            },
+            "language": { "type": "string" },
+            "duration_sec": { "type": "number" },
+            "model": { "type": "string" },
+            "transcribed_at": { "type": "string", "format": "date-time" },
+            "word_count": { "type": "integer" }
+          }
+        },
+        "classification.json": {
+          "description": "Daemon classification output. Written by the daemon after transcription. Optional — daemon may not be running.",
+          "type": "object",
+          "required": ["category", "confidence", "metadata", "classified_at", "classifier", "version"],
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": ["reminder", "task", "devlog", "message", "knowledge", "idea", "todo", "shopping"]
+            },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "metadata": { "type": "object", "description": "Category-specific metadata (store, recipient, tags, etc.)" },
+            "classified_at": { "type": "string", "format": "date-time" },
+            "classifier": { "type": "string" },
+            "version": { "type": "integer" }
+          }
+        },
+        "context.json": {
+          "description": "Screen focus and environment context. Future — not yet implemented.",
+          "type": "object",
+          "properties": {
+            "active_app": { "type": "string" },
+            "active_url": { "type": "string" },
+            "screen_text": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
