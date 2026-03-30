@@ -28,11 +28,18 @@ class WhisperService {
         let stdout = Pipe()
         let stderr = Pipe()
 
-        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = [
-            "-l", "-c",
-            "python3 '\(scriptPath)' '\(fileURL.path)' '\(model)'"
+        // Use pyenv Python directly — .app processes don't inherit shell env reliably
+        let pythonCandidates = [
+            NSHomeDirectory() + "/.pyenv/versions/3.12.7/bin/python3",
+            NSHomeDirectory() + "/.pyenv/shims/python3",
+            "/opt/homebrew/bin/python3",
+            "/usr/local/bin/python3",
+            "/usr/bin/python3",
         ]
+        let python = pythonCandidates.first { FileManager.default.fileExists(atPath: $0) } ?? "python3"
+
+        process.executableURL = URL(fileURLWithPath: python)
+        process.arguments = [scriptPath, fileURL.path, model]
         process.standardOutput = stdout
         process.standardError = stderr
 

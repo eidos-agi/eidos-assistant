@@ -13,6 +13,7 @@ struct EidosAssistantApp: App {
                 .environmentObject(appDelegate.noteStore)
                 .environmentObject(appDelegate.recorder)
                 .environmentObject(appDelegate)
+                .environmentObject(appDelegate.chainLogger)
         }
         .defaultSize(width: 520, height: 600)
 
@@ -46,6 +47,7 @@ struct MainWindowView: View {
                 Label("Notes", systemImage: "list.bullet").tag(0)
                 Label("Calendar", systemImage: "calendar").tag(1)
                 Label("Export", systemImage: "square.and.arrow.up").tag(2)
+                Label("Debug", systemImage: "ant.fill").tag(3)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
@@ -93,6 +95,10 @@ struct MainWindowView: View {
             case 2:
                 ExportView()
                     .environmentObject(noteStore)
+
+            case 3:
+                DebugView()
+                    .environmentObject(ChainLogger.shared)
 
             default:
                 EmptyView()
@@ -488,6 +494,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let noteStore = NoteStore()
     let recorder = AudioRecorderService()
     let floatingPanel = FloatingPanelController()
+    let chainLogger = ChainLogger.shared
 
     @Published var whisperModel: String = "large-v3-turbo"
     @Published var hotkeyChar: String = "e"
@@ -504,6 +511,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         registerHotkeys()
         registerWithOmni()
         startDaemon()
+        chainLogger.runHealthChecks()
 
         // RAM watchdog — if memory exceeds 150MB, force-stop everything
         MemoryGuard.shared.startWatchdog { [weak self] in
@@ -639,17 +647,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private func checkAccessibility() {
         let trusted = AXIsProcessTrusted()
         if !trusted {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-                styleMask: [.titled, .closable],
-                backing: .buffered, defer: false
-            )
-            window.contentView = NSHostingView(rootView: AccessibilityGuideView())
-            window.center()
-            window.title = "Setup Required"
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            accessibilityWindow = window
+            chainLogger.log("Accessibility", status: .info, detail: "Not granted — grant in System Settings > Privacy > Accessibility")
         }
     }
 
@@ -710,7 +708,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             guard !pttActive else { return }  // Already recording from this PTT press
             pttActive = true
             if !recorder.isRecording && !recorder.isTranscribing {
+                chainLogger.log("PTT key down", status: .start)
                 recorder.startRecording()
+                chainLogger.log("Recording started", status: .ok, detail: "input: \(recorder.currentInputName)")
                 floatingPanel.show(recorder: recorder)
             }
             return
@@ -769,11 +769,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func performStopAndTranscribe() async {
         if recorder.isRecording {
-            guard let fileURL = recorder.stopRecording() else { return }
+            guard let fileURL = recorder.stopRecording() else {
+                chainLogger.log("Stop recording", status: .fail, detail: "no file URL returned")
+                return
+            }
             let duration = recorder.lastRecordingDuration
+            chainLogger.log("Recording stopped", status: .ok, detail: String(format: "%.1fs, file: %@", duration, fileURL.lastPathComponent))
 
             // Debounce: <0.5s is a PTT accident
             if duration < 0.5 {
+                chainLogger.log("Debounce", status: .info, detail: String(format: "%.2fs < 0.5s — discarded", duration))
                 try? FileManager.default.removeItem(at: fileURL)
                 floatingPanel.hide()
                 return
@@ -784,19 +789,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
             let bucketID = UUID()
             let bucketDir = voiceRecordingsDir.appendingPathComponent(bucketID.uuidString)
+            chainLogger.log("Bucket", status: .start, detail: bucketID.uuidString)
 
             do {
                 // 1. Create bucket directory
                 try FileManager.default.createDirectory(at: bucketDir, withIntermediateDirectories: true)
+                chainLogger.log("Bucket created", status: .ok)
 
                 // 2. Move audio.wav into bucket
                 let audioPath = bucketDir.appendingPathComponent("audio.wav")
                 try FileManager.default.moveItem(at: fileURL, to: audioPath)
+                let audioSize = (try? FileManager.default.attributesOfItem(atPath: audioPath.path)[.size] as? Int) ?? 0
+                chainLogger.log("Audio moved", status: .ok, detail: "\(audioSize / 1024)KB")
 
                 // 3. Transcribe → write transcript.json into bucket
+                chainLogger.log("Whisper", status: .start, detail: "model: \(whisperModel)")
                 let transcribeStart = Date()
                 let result = try await WhisperService.shared.transcribe(fileURL: audioPath, model: whisperModel)
                 let transcribeTime = Date().timeIntervalSince(transcribeStart)
+                chainLogger.log("Whisper done", status: .ok, detail: String(format: "%.1fs — \"%@\"", transcribeTime, String(result.text.prefix(60))))
 
                 let transcriptPath = bucketDir.appendingPathComponent("transcript.json")
                 try result.rawJSON.write(to: transcriptPath, options: .atomic)
@@ -857,8 +868,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     }
                 }
             } catch {
+                chainLogger.log("CHAIN FAILED", status: .fail, detail: error.localizedDescription)
                 print("Transcription error: \(error)")
-                // If bucket was created but transcription failed, keep audio for retry
             }
 
             recorder.isTranscribing = false
