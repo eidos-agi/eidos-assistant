@@ -1,0 +1,15 @@
+{
+  "id": "2f5d9e09-6498-46c4-b5de-52643536a5fe",
+  "version": "0.1.0",
+  "projectName": "voice-data-model",
+  "created": "2026-03-29",
+  "phase": "research",
+  "transitions": [
+    {
+      "phase": "research",
+      "date": "2026-03-29"
+    }
+  ],
+  "question": "What is the right data model for voice notes as a source in eidos omni \u2014 the AGI brain that indexes a person's entire digital life?",
+  "context": "Omni indexes 55K+ resources (files, messages, emails, photos, browser, Claude sessions, terminal). Voice is the newest source. Daemon classifies at write time (reminder, task, devlog, message, knowledge, idea, todo, shopping). Must fit omni's adapter/resource pattern, support temporal correlation, carry classification + original audio files, be eventually consistent. The data model is the product."
+}

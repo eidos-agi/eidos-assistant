@@ -1,0 +1,15 @@
+{
+  "id": "bf817b7f-6823-4fed-a823-7d0ba5346a1d",
+  "version": "0.1.0",
+  "projectName": "eidos-assistant",
+  "created": "2026-03-29",
+  "phase": "research",
+  "transitions": [
+    {
+      "phase": "research",
+      "date": "2026-03-29"
+    }
+  ],
+  "question": "What is the optimal architecture for a macOS voice-notes app that uses local Whisper, and what testing strategy ensures reliability?",
+  "context": "Building eidos-assistant-v0: a native SwiftUI Mac app with Cmd+E global hotkey, local Whisper (large-v3-turbo) transcription, JSON note storage, floating recording indicator, and 30 UX features. Need to validate all features work reliably before shipping."
+}
